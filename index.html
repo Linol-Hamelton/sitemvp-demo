@@ -8,7 +8,7 @@
   <title>SiteMVP — сайт, в котором узнают ваше дело</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="../chat-server/chat-widget.css">
+  <link rel="stylesheet" href="chat-server/chat-widget.css">
 </head>
 <body>
   <a class="skip-link" href="#main">Перейти к содержимому</a>
@@ -79,7 +79,7 @@
 
     <section class="final-cta wrap"><div><p class="eyebrow">Давайте познакомимся</p><h2>У вашего дела<br>будет свой адрес.</h2><p>Начните с разговора. Первый концепт-превью — бесплатно.</p><a class="button button-dark" href="#sitemvp-chat-widget" data-sitemvp-chat-open>Начать в чате <span aria-hidden="true">↗</span></a></div><span class="cta-flower" aria-hidden="true">✳</span></section>
   </main>
-  <footer class="footer wrap"><div><a class="brand" href="index.html">SiteMVP<span aria-hidden="true">↗</span></a><p>Индивидуальные сайты для вашего дела.</p></div><div><a href="https://t.me/online_bronirovanie_robot">Telegram ↗</a><p>Демонстрационный прототип · 2026</p></div><p class="footer-note">Примеры содержат вымышленные данные. Этот сайт не принимает платежи; основной канал — чат на этой странице, Telegram — вторичный.</p></footer>
+  <footer class="footer wrap"><div><a class="brand" href="index.html">SiteMVP<span aria-hidden="true">↗</span></a><p>Индивидуальные сайты для вашего дела.</p></div><div><p>Демонстрационный прототип · 2026</p></div><p class="footer-note">Примеры содержат вымышленные данные. Этот сайт не принимает платежи; заявку примет чат на этой странице.</p></footer>
   <!-- SiteMVP local demo chat -->
   <div id="sitemvp-chat-widget" class="sitemvp-chat-widget">
     <button class="sitemvp-chat-toggle" type="button" aria-controls="sitemvp-chat-panel" aria-expanded="false" aria-label="Открыть чат">Чат</button>
@@ -101,7 +101,7 @@
         <input id="sitemvp-chat-input" type="text" maxlength="700" autocomplete="off" placeholder="Напишите ответ…" aria-label="Ваш ответ">
         <button type="submit">Отправить</button>
       </form>
-      <a class="sitemvp-chat-cta" href="https://t.me/online_bronirovanie_robot" target="_blank" rel="noopener noreferrer" hidden>Или напишите в Telegram <span aria-hidden="true">↗</span></a>
+      <span class="sitemvp-chat-cta" hidden>Демо завершено — в рабочем сервисе заявку примет оператор.</span>
     </section>
   </div>
   <style>
@@ -258,6 +258,6 @@
       });
     }());
   </script>
-  <script>window.SITEMVP_CHAT_API='https://producers-forbes-stan-java.trycloudflare.com';</script><script src="../chat-server/chat-widget.js"></script>
+  <script>window.SITEMVP_CHAT_API='https://producers-forbes-stan-java.trycloudflare.com';</script><script src="chat-server/chat-widget.js"></script>
 </body>
 </html>
