@@ -1,0 +1,165 @@
+{
+  "source": "ui_ux_pro get_design_system and search_styles (style, color, typography) called per landing; recommendations adapted to the dispatch lane and implemented with local assets and system fonts, without CDN.",
+  "landings": [
+    {
+      "slug": "bankrotstvo-advokat",
+      "title": "Сайт для юриста по банкротству физлиц от 5 000 ₽ — SiteMVP",
+      "theme": "dark",
+      "style": "Apple-like dark premium / exaggerated minimalism",
+      "mcpStyle": "Exaggerated Minimalism",
+      "mcpFonts": "Atkinson Hyperlegible / Atkinson Hyperlegible; iOS Native SF Pro / SF Mono from typography search",
+      "palette": {
+        "background": "#151514",
+        "surface": "#201f1b",
+        "text": "#f0ede6",
+        "muted": "#b8b1a4",
+        "accent": "#d6bb82",
+        "line": "#474239",
+        "cta": "#d6bb82",
+        "ctaText": "#241e13"
+      },
+      "fonts": {
+        "heading": "-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif",
+        "body": "-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif"
+      },
+      "screenshots": [
+        "screenshots/bankrotstvo-advokat-desktop.png",
+        "screenshots/bankrotstvo-advokat-mobile.png"
+      ]
+    },
+    {
+      "slug": "kpt-psiholog",
+      "title": "Сайт для психолога КПТ от 5 000 руб — SiteMVP",
+      "theme": "light",
+      "style": "Aesop-like warm editorial minimalism / Magazine Style",
+      "mcpStyle": "Magazine Style typography with warm, accessible care palette",
+      "mcpFonts": "Libre Bodoni / Public Sans",
+      "palette": {
+        "background": "#f5f5f0",
+        "surface": "#fbfaf6",
+        "text": "#26372f",
+        "muted": "#58645b",
+        "primary": "#2d4a3e",
+        "secondary": "#a8c4b2",
+        "cta": "#2d4a3e",
+        "ctaText": "#ffffff",
+        "warmAccent": "#d4a87a",
+        "line": "#d8ddd3"
+      },
+      "fonts": {
+        "heading": "Georgia, Times New Roman, serif",
+        "body": "Segoe UI, Arial, sans-serif"
+      },
+      "screenshots": [
+        "screenshots/kpt-psiholog-desktop.png",
+        "screenshots/kpt-psiholog-mobile.png"
+      ]
+    },
+    {
+      "slug": "ege-matematika",
+      "title": "Сайт репетитора по математике ЕГЭ от 5 000 руб — SiteMVP",
+      "theme": "light",
+      "style": "Nike-like poster brutalism",
+      "mcpStyle": "Brutalism",
+      "mcpFonts": "Anton / Epilogue",
+      "palette": {
+        "background": "#f4f2eb",
+        "surface": "#ffffff",
+        "text": "#151515",
+        "primary": "#2448db",
+        "accent": "#d4fa37",
+        "line": "#151515",
+        "cta": "#151515",
+        "ctaText": "#f4f2eb"
+      },
+      "fonts": {
+        "heading": "Impact, Arial Narrow, Haettenschweiler, sans-serif",
+        "body": "Arial, Segoe UI, sans-serif"
+      },
+      "screenshots": [
+        "screenshots/ege-matematika-desktop.png",
+        "screenshots/ege-matematika-mobile.png"
+      ]
+    },
+    {
+      "slug": "elektrik-avariynyy",
+      "title": "Сайт мастера-электрика 24/7 от 5 000 руб — SiteMVP",
+      "theme": "dark",
+      "style": "Linear-like dark technical",
+      "mcpStyle": "Dark technical minimalism; Brutalist Raw / Space Mono typography search",
+      "mcpFonts": "Space Mono / Space Mono",
+      "palette": {
+        "background": "#111715",
+        "surface": "#1b2420",
+        "text": "#eff2e8",
+        "muted": "#b5bdb2",
+        "line": "#3a4640",
+        "accent": "#ffdb52",
+        "cta": "#ffdb52",
+        "ctaText": "#171812"
+      },
+      "fonts": {
+        "heading": "Segoe UI, Arial, sans-serif",
+        "body": "Segoe UI, Arial, sans-serif",
+        "details": "Cascadia Code, Consolas, monospace"
+      },
+      "screenshots": [
+        "screenshots/elektrik-avariynyy-desktop.png",
+        "screenshots/elektrik-avariynyy-mobile.png"
+      ]
+    },
+    {
+      "slug": "interior-designer",
+      "title": "Сайт дизайнера интерьеров от 5 000 руб — SiteMVP",
+      "theme": "dark",
+      "style": "Linear-like dark editorial",
+      "mcpStyle": "Dark Mode (OLED) adapted to editorial portfolio layout",
+      "mcpFonts": "Archivo / Space Grotesk; Magazine Style search: Libre Bodoni / Public Sans",
+      "palette": {
+        "background": "#121313",
+        "surface": "#1b1c1b",
+        "text": "#f0ede7",
+        "muted": "#b3ada4",
+        "line": "#41413d",
+        "accent": "#c5b4a2",
+        "cta": "#c5b4a2",
+        "ctaText": "#1c1b19"
+      },
+      "fonts": {
+        "heading": "Georgia, Times New Roman, serif",
+        "body": "Arial, Segoe UI, sans-serif"
+      },
+      "screenshots": [
+        "screenshots/interior-designer-desktop.png",
+        "screenshots/interior-designer-mobile.png"
+      ]
+    },
+    {
+      "slug": "torty-na-zakaz",
+      "title": "Сайт кондитера: торты на заказ от 5 000 руб — SiteMVP",
+      "theme": "light",
+      "style": "Airbnb-like warm craft pastel / Claymorphism",
+      "mcpStyle": "Claymorphism; Bakery/Pastry palette; Soft Rounded typography",
+      "mcpFonts": "Varela Round / Nunito Sans",
+      "palette": {
+        "background": "#fbf8ef",
+        "surface": "#fffdf8",
+        "text": "#4a3728",
+        "muted": "#766457",
+        "primary": "#c4a77d",
+        "secondary": "#dbc19c",
+        "cta": "#d4733a",
+        "ctaText": "#301a10",
+        "line": "#e8ddd4"
+      },
+      "fonts": {
+        "heading": "Trebuchet MS, Segoe UI, sans-serif",
+        "body": "Trebuchet MS, Segoe UI, sans-serif"
+      },
+      "screenshots": [
+        "screenshots/torty-na-zakaz-desktop.png",
+        "screenshots/torty-na-zakaz-mobile.png"
+      ]
+    }
+  ]
+}
