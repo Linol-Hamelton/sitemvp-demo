@@ -33,12 +33,20 @@
   let cursor = 0;
   let isPolling = false;
   let isSending = false;
+  let isStartingRecording = false;
   let welcomeShown = false;
   let recorder = null;
   let microphoneStream = null;
   let recordingParts = [];
   let discardRecording = false;
+  let recordingStartedAt = 0;
+  let recordingTimer = 0;
+  let feedbackTimer = 0;
   const objectUrls = new Set();
+  const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+  const MAX_COMPRESSED_PHOTO_BYTES = 1024 * 1024;
+  const MAX_PHOTO_EDGE = 1920;
+  const MEDIA_TIMEOUT_MS = 30 * 1000;
 
   function makeClientId() {
     if (window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID();
@@ -57,8 +65,17 @@
   }
 
   function setFeedback(message, isError) {
+    if (feedbackTimer) {
+      window.clearTimeout(feedbackTimer);
+      feedbackTimer = 0;
+    }
     feedback.textContent = message;
     feedback.classList.toggle('is-error', Boolean(isError));
+  }
+
+  function setSuccessFeedback(message) {
+    setFeedback(message, false);
+    feedbackTimer = window.setTimeout(() => setFeedback('', false), 2500);
   }
 
   function makeElement(tag, className, text) {
@@ -97,7 +114,21 @@
   voiceButton.type = 'button';
   voiceButton.setAttribute('aria-pressed', 'false');
   voiceButton.setAttribute('aria-label', 'Записать голосовое сообщение');
-  tools.append(photoInput, voiceButton);
+  const recordingStatus = makeElement('p', 'sitemvp-chat-recording-status');
+  recordingStatus.setAttribute('role', 'status');
+  recordingStatus.setAttribute('aria-live', 'off');
+  const recordingDot = makeElement('span', 'sitemvp-chat-recording-dot');
+  recordingDot.setAttribute('aria-hidden', 'true');
+  const recordingLabel = makeElement('span', '', 'Идёт запись');
+  const recordingClock = makeElement('time', '', '00:00');
+  recordingClock.setAttribute('aria-label', 'Время записи');
+  recordingStatus.append(recordingDot, recordingLabel, recordingClock);
+  recordingStatus.hidden = true;
+  const cancelVoiceButton = makeElement('button', 'sitemvp-chat-recording-cancel', '×');
+  cancelVoiceButton.type = 'button';
+  cancelVoiceButton.setAttribute('aria-label', 'Отменить запись');
+  cancelVoiceButton.hidden = true;
+  tools.append(photoInput, voiceButton, recordingStatus, cancelVoiceButton);
   const attachments = makeElement('details', 'sitemvp-chat-attachments');
   const attachmentsSummary = makeElement('summary', '', 'Фото или голос');
   attachments.append(attachmentsSummary, tools);
@@ -114,6 +145,17 @@
     attachmentsSummary.textContent = selectingAttachment ? 'Назад в чат' : 'Фото или голос';
     closeButton.hidden = selectingAttachment;
     toggle.hidden = !panel.hidden;
+  }
+
+  function setMediaBusy(busy, allowVoice = false) {
+    tools.classList.toggle('is-busy', busy);
+    tools.setAttribute('aria-busy', String(busy));
+    photoInput.disabled = busy;
+    voiceButton.disabled = busy && !allowVoice;
+    photoInput.setAttribute('aria-disabled', String(busy));
+    voiceButton.setAttribute('aria-disabled', String(busy && !allowVoice));
+    attachmentsSummary.setAttribute('aria-disabled', String(busy));
+    if (busy && !allowVoice) attachments.open = false;
   }
 
   function syncComposerActions() {
@@ -229,7 +271,7 @@
       }
       const nextCursor = Number(data.cursor);
       if (Number.isSafeInteger(nextCursor) && nextCursor >= cursor) cursor = nextCursor;
-      if (feedback.textContent === 'Подключаемся…' || feedback.classList.contains('is-error')) setFeedback('', false);
+      if (feedback.textContent === 'Подключаемся…') setFeedback('', false);
     } catch (_error) {
       setOperatorStatus(false);
     } finally {
@@ -251,50 +293,172 @@
     });
   }
 
+  function photoFormatError() {
+    return new Error('Этот формат фото не поддерживается этим браузером. Выберите другое фото (JPEG/PNG).');
+  }
+
+  async function decodeImage(file) {
+    if (typeof window.createImageBitmap === 'function') {
+      try {
+        const bitmap = await window.createImageBitmap(file);
+        if (bitmap.width > 0 && bitmap.height > 0) {
+          return {
+            source: bitmap,
+            width: bitmap.width,
+            height: bitmap.height,
+            dispose: () => bitmap.close()
+          };
+        }
+        bitmap.close();
+      } catch (_error) {
+        // The Image fallback handles browsers that can display formats createImageBitmap cannot decode.
+      }
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    try {
+      const image = await new Promise((resolve, reject) => {
+        const candidate = new Image();
+        candidate.onload = () => resolve(candidate);
+        candidate.onerror = () => reject(photoFormatError());
+        candidate.src = objectUrl;
+      });
+      if (!image.naturalWidth || !image.naturalHeight) throw photoFormatError();
+      return {
+        source: image,
+        width: image.naturalWidth,
+        height: image.naturalHeight,
+        dispose: () => URL.revokeObjectURL(objectUrl)
+      };
+    } catch (error) {
+      URL.revokeObjectURL(objectUrl);
+      throw error && error.message ? error : photoFormatError();
+    }
+  }
+
+  function canvasToJpeg(canvas, quality) {
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (blob) resolve(blob);
+        else reject(new Error('Не получилось обработать фото. Выберите другое фото и попробуйте снова.'));
+      }, 'image/jpeg', quality);
+    });
+  }
+
+  async function normalizePhoto(file) {
+    if (!file || (file.type && !/^image\//i.test(file.type))) {
+      throw new Error('Выберите файл изображения (JPEG или PNG).');
+    }
+    if (file.size > MAX_UPLOAD_BYTES) throw new Error('Фото должно быть не больше 10 МБ.');
+
+    let decoded;
+    try {
+      decoded = await decodeImage(file);
+    } catch (_error) {
+      throw photoFormatError();
+    }
+
+    try {
+      const scale = Math.min(1, MAX_PHOTO_EDGE / Math.max(decoded.width, decoded.height));
+      const width = Math.max(1, Math.round(decoded.width * scale));
+      const height = Math.max(1, Math.round(decoded.height * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext('2d');
+      if (!context) throw new Error('Не получилось обработать фото. Выберите другое фото и попробуйте снова.');
+      context.drawImage(decoded.source, 0, 0, width, height);
+
+      for (const quality of [0.8, 0.75, 0.7, 0.65, 0.6]) {
+        const jpeg = await canvasToJpeg(canvas, quality);
+        if (jpeg.size <= MAX_COMPRESSED_PHOTO_BYTES) {
+          return new File([jpeg], 'photo.jpg', { type: 'image/jpeg', lastModified: Date.now() });
+        }
+      }
+      throw new Error('Фото не удалось сжать до 1 МБ. Выберите фото поменьше.');
+    } finally {
+      decoded.dispose();
+    }
+  }
+
+  function voiceExtension(mime) {
+    const type = String(mime || '').toLowerCase().split(';', 1)[0];
+    if (type === 'audio/ogg') return 'ogg';
+    if (type === 'audio/mp4') return 'm4a';
+    if (type === 'audio/mpeg') return 'mp3';
+    if (type === 'audio/wav' || type === 'audio/x-wav') return 'wav';
+    return 'webm';
+  }
+
   async function sendMessage(kind, file) {
     if (!clientId || isSending) return;
     const text = messageInput.value.trim();
     if (kind === 'text' && !text) return;
-    if (file && file.size > 10 * 1024 * 1024) {
-      setFeedback('Файл должен быть не больше 10 МБ.', true);
+    if (file && file.size > MAX_UPLOAD_BYTES) {
+      setFeedback(kind === 'photo' ? 'Фото должно быть не больше 10 МБ.' : 'Голосовое сообщение должно быть не больше 10 МБ.', true);
+      return;
+    }
+    if (kind === 'photo' && file && file.type && !/^image\//i.test(file.type)) {
+      setFeedback('Выберите файл изображения (JPEG или PNG).', true);
       return;
     }
 
     isSending = true;
     sendButton.disabled = true;
-    photoInput.disabled = true;
-    voiceButton.disabled = true;
-    setFeedback('Отправляем…', false);
+    setMediaBusy(true);
     try {
       const body = { clientId, kind, text };
+      let uploadFile = file;
       if (file) {
-        body.fileBase64 = await readAsBase64(file);
-        const extension = String(file.name || '').split('.').pop().toLowerCase();
-        const fallbackTypes = {
-          jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif', avif: 'image/avif',
-          webm: 'audio/webm', ogg: 'audio/ogg', mp3: 'audio/mpeg', m4a: 'audio/mp4', wav: 'audio/wav'
-        };
-        body.mime = file.type || fallbackTypes[extension] || (kind === 'voice' ? 'audio/webm' : 'image/jpeg');
-        body.filename = file.name || (kind === 'voice' ? 'voice.webm' : 'photo');
+        if (kind === 'photo') {
+          setFeedback('Обрабатываем фото…', false);
+          uploadFile = await normalizePhoto(file);
+          body.mime = 'image/jpeg';
+          body.filename = 'photo.jpg';
+        } else {
+          setFeedback('Готовим голосовое…', false);
+          body.mime = file.type || 'audio/webm';
+          body.filename = 'voice.' + voiceExtension(body.mime);
+        }
+        body.fileBase64 = await readAsBase64(uploadFile);
       }
-      const data = await requestJson('/api/msg', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
+      setFeedback(file ? 'Отправляем…' : '', false);
+      let data;
+      let timeoutId = 0;
+      const controller = file ? new AbortController() : null;
+      if (controller) timeoutId = window.setTimeout(() => controller.abort(), MEDIA_TIMEOUT_MS);
+      try {
+        data = await requestJson('/api/msg', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+          signal: controller ? controller.signal : undefined
+        });
+      } catch (error) {
+        if (controller && controller.signal.aborted) {
+          throw new Error('Отправка заняла больше 30 секунд. Проверьте соединение и попробуйте ещё раз.');
+        }
+        if (file && error && (error.name === 'TypeError' || error.name === 'NetworkError')) {
+          throw new Error('Не удалось подключиться к чату. Проверьте интернет и попробуйте ещё раз.');
+        }
+        throw error;
+      } finally {
+        if (timeoutId) window.clearTimeout(timeoutId);
+      }
       appendMessage({
         from: 'client',
         kind,
         text,
-        fileUrl: file ? URL.createObjectURL(file) : '',
+        fileUrl: uploadFile ? URL.createObjectURL(uploadFile) : '',
         createdAt: new Date().toISOString()
       });
-      if (file) objectUrls.add(thread.lastElementChild.querySelector('img, audio')?.src || '');
+      if (uploadFile) objectUrls.add(thread.lastElementChild.querySelector('img, audio')?.src || '');
       const nextCursor = Number(data.cursor);
       if (Number.isSafeInteger(nextCursor) && nextCursor >= cursor) cursor = nextCursor;
       messageInput.value = '';
       syncComposerActions();
-      setFeedback('', false);
+      if (file) setSuccessFeedback(kind === 'photo' ? 'Фото отправлено.' : 'Голосовое отправлено.');
+      else setFeedback('', false);
       setOperatorStatus(true);
     } catch (error) {
       setOperatorStatus(false);
@@ -302,8 +466,7 @@
     } finally {
       isSending = false;
       sendButton.disabled = false;
-      photoInput.disabled = false;
-      voiceButton.disabled = false;
+      setMediaBusy(false);
       poll();
     }
   }
@@ -331,16 +494,43 @@
     }
   });
 
+  function updateRecordingClock() {
+    const seconds = Math.max(0, Math.floor((Date.now() - recordingStartedAt) / 1000));
+    const minutes = String(Math.floor(seconds / 60)).padStart(2, '0');
+    const remainder = String(seconds % 60).padStart(2, '0');
+    recordingClock.textContent = minutes + ':' + remainder;
+  }
+
+  function resetRecordingUi() {
+    if (recordingTimer) {
+      window.clearInterval(recordingTimer);
+      recordingTimer = 0;
+    }
+    recordingStatus.hidden = true;
+    cancelVoiceButton.hidden = true;
+    voiceButton.textContent = 'Записать голосовое';
+    voiceButton.setAttribute('aria-label', 'Записать голосовое сообщение');
+    voiceButton.setAttribute('aria-pressed', 'false');
+    recordingClock.textContent = '00:00';
+    attachments.open = false;
+    setMediaBusy(false);
+  }
+
   function stopRecording(discard) {
     discardRecording = Boolean(discard);
     if (recorder && recorder.state !== 'inactive') recorder.stop();
   }
 
   async function startRecording() {
+    if (isSending || isStartingRecording || (recorder && recorder.state !== 'inactive')) return;
     if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function' || typeof window.MediaRecorder !== 'function') {
       setFeedback('Запись голоса недоступна в этом браузере. Можно написать или прикрепить фото.', true);
       return;
     }
+    isStartingRecording = true;
+    setMediaBusy(true, true);
+    voiceButton.disabled = true;
+    setFeedback('Подключаем микрофон…', false);
     try {
       microphoneStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'];
@@ -349,6 +539,7 @@
         : '';
       recorder = mimeType ? new MediaRecorder(microphoneStream, { mimeType }) : new MediaRecorder(microphoneStream);
       recordingParts = [];
+      discardRecording = false;
       recorder.addEventListener('dataavailable', (event) => {
         if (event.data && event.data.size) recordingParts.push(event.data);
       });
@@ -359,26 +550,37 @@
         if (microphoneStream) microphoneStream.getTracks().forEach((track) => track.stop());
         microphoneStream = null;
         recorder = null;
-        voiceButton.textContent = 'Записать голосовое';
-        voiceButton.setAttribute('aria-label', 'Записать голосовое сообщение');
-        voiceButton.setAttribute('aria-pressed', 'false');
-        if (blob.size && !discardRecording) {
+        const wasDiscarded = discardRecording;
+        discardRecording = false;
+        resetRecordingUi();
+        if (blob.size && !wasDiscarded) {
           attachments.open = false;
           sendMessage('voice', blob);
+        } else if (!wasDiscarded) {
+          setFeedback('Не удалось записать голосовое. Попробуйте ещё раз или напишите сообщение.', true);
+        } else {
+          setFeedback('Запись отменена.', false);
         }
-        discardRecording = false;
       }, { once: true });
       recorder.start();
-      voiceButton.textContent = 'Остановить запись';
-      voiceButton.setAttribute('aria-label', 'Остановить запись голоса');
+      isStartingRecording = false;
+      recordingStartedAt = Date.now();
+      updateRecordingClock();
+      recordingStatus.hidden = false;
+      cancelVoiceButton.hidden = false;
+      recordingTimer = window.setInterval(updateRecordingClock, 1000);
+      voiceButton.disabled = false;
+      voiceButton.textContent = 'Отправить голосовое';
+      voiceButton.setAttribute('aria-label', 'Отправить голосовое сообщение');
       voiceButton.setAttribute('aria-pressed', 'true');
-      setFeedback('Идёт запись. Нажмите «Остановить запись», когда закончите.', false);
+      setMediaBusy(true, true);
+      setFeedback('Идёт запись. Нажмите «Отправить голосовое», чтобы отправить, или отмените запись.', false);
     } catch (_error) {
       if (microphoneStream) microphoneStream.getTracks().forEach((track) => track.stop());
       microphoneStream = null;
       recorder = null;
-      voiceButton.textContent = 'Записать голосовое';
-      voiceButton.setAttribute('aria-pressed', 'false');
+      isStartingRecording = false;
+      resetRecordingUi();
       setFeedback('Нет доступа к микрофону. Разрешите запись или отправьте текст.', true);
     }
   }
@@ -386,6 +588,10 @@
   voiceButton.addEventListener('click', () => {
     if (recorder && recorder.state !== 'inactive') stopRecording();
     else startRecording();
+  });
+  cancelVoiceButton.addEventListener('click', () => stopRecording(true));
+  attachmentsSummary.addEventListener('click', (event) => {
+    if (isSending || isStartingRecording || (recorder && recorder.state !== 'inactive')) event.preventDefault();
   });
 
   toggle.addEventListener('click', () => {
@@ -406,6 +612,8 @@
       panelObserver.disconnect();
       stopRecording(true);
       if (microphoneStream) microphoneStream.getTracks().forEach((track) => track.stop());
+      if (recordingTimer) window.clearInterval(recordingTimer);
+      if (feedbackTimer) window.clearTimeout(feedbackTimer);
       objectUrls.forEach((url) => { if (url) URL.revokeObjectURL(url); });
     }, { once: true });
   } else {
