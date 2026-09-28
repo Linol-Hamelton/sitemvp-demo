@@ -26,5 +26,176 @@
     <section class="final wrap"><div><p class="eyebrow">SiteMVP</p><h2>Заказать сайт электрика от 5 000 руб</h2><p>4 вопроса в чате · До оплаты — 1 бесплатный концепт · Срок до 5 дней</p></div><a class="button" href="../../index.html">Посмотреть концепт страницы ↗</a></section>
   </main>
   <footer class="footer wrap"><p>Демонстрационный прототип · Все проекты на странице — вымышленные примеры.</p><a href="../../index.html">SiteMVP ↗</a></footer>
+  <!-- SiteMVP local demo chat -->
+  <div id="sitemvp-chat-widget" class="sitemvp-chat-widget">
+    <button class="sitemvp-chat-toggle" type="button" aria-controls="sitemvp-chat-panel" aria-expanded="false" aria-label="Открыть чат">Чат</button>
+    <section id="sitemvp-chat-panel" class="sitemvp-chat-panel" role="dialog" aria-label="Чат с SiteMVP" aria-modal="false" aria-describedby="sitemvp-chat-notice" hidden>
+      <header class="sitemvp-chat-header">
+        <div><span class="sitemvp-chat-kicker">SiteMVP · демо</span><h2 class="sitemvp-chat-title">Давайте знакомиться</h2></div>
+        <button class="sitemvp-chat-close" type="button" aria-label="Закрыть чат">×</button>
+      </header>
+      <p id="sitemvp-chat-notice" class="sitemvp-chat-notice"><strong>Демо-режим:</strong> сообщения обрабатываются локально, отправка появится позже. Используйте вымышленные данные.</p>
+      <div class="sitemvp-chat-thread" role="log" aria-label="Сообщения чата" aria-live="polite" aria-relevant="additions" aria-atomic="false">
+        <div class="sitemvp-chat-message is-assistant"><p>Здравствуйте! 👋 Помогу подготовить индивидуальный сайт. Ответьте на 4 вопроса — в этой демонстрации переписка останется только на странице.</p></div>
+      </div>
+      <div class="sitemvp-chat-quick" role="group" aria-label="Быстрые ответы">
+        <button type="button" data-chat-action="start">Начать</button>
+        <button type="button" data-chat-action="prepare">Что подготовить?</button>
+      </div>
+      <form class="sitemvp-chat-form" hidden>
+        <label class="sitemvp-chat-sr-only" for="sitemvp-chat-input">Ваш ответ</label>
+        <input id="sitemvp-chat-input" type="text" maxlength="700" autocomplete="off" placeholder="Напишите ответ…" aria-label="Ваш ответ">
+        <button type="submit">Отправить</button>
+      </form>
+      <a class="sitemvp-chat-cta" href="https://t.me/online_bronirovanie_robot" target="_blank" rel="noopener noreferrer" hidden>Оставить заявку в Telegram <span aria-hidden="true">↗</span></a>
+    </section>
+  </div>
+  <style>
+    .sitemvp-chat-widget {
+      --sm-chat-surface: var(--panel, var(--paper, var(--bg, #fff)));
+      --sm-chat-page: var(--bg, var(--paper, #fff));
+      --sm-chat-ink: var(--ink, #24342c);
+      --sm-chat-muted: var(--muted, #657168);
+      --sm-chat-line: var(--line, #d8ded8);
+      --sm-chat-accent: var(--lime, var(--gold, var(--signal, var(--olive, var(--stone, var(--cta, #a8c4b2))))));
+      color: var(--sm-chat-ink);
+      font-family: var(--sans, var(--round, var(--serif, system-ui, sans-serif)));
+    }
+    .sitemvp-chat-widget, .sitemvp-chat-widget * { box-sizing: border-box; }
+    .sitemvp-chat-toggle {
+      position: fixed; z-index: 2147483000; right: max(16px, env(safe-area-inset-right, 0px));
+      bottom: max(16px, env(safe-area-inset-bottom, 0px)); min-width: 78px; min-height: 52px;
+      padding: 12px 20px; border: 1px solid var(--sm-chat-line); border-radius: 999px;
+      background: var(--sm-chat-ink); color: var(--sm-chat-page); font-family: inherit; font-size: 15px; font-weight: 650; line-height: 1.2;
+      box-shadow: 0 8px 26px #0003; cursor: pointer;
+    }
+    .sitemvp-chat-panel {
+      position: fixed; z-index: 2147483000; right: max(16px, env(safe-area-inset-right, 0px));
+      bottom: calc(78px + env(safe-area-inset-bottom, 0px)); width: min(390px, calc(100vw - 32px));
+      max-height: min(78vh, 680px); max-height: min(78dvh, 680px); display: flex; flex-direction: column;
+      gap: 12px; padding: 16px; overflow: hidden; border: 1px solid var(--sm-chat-line);
+      border-radius: 18px; background: var(--sm-chat-surface); color: var(--sm-chat-ink);
+      box-shadow: 0 16px 48px #0004; font-family: inherit; font-size: 14px; line-height: 1.5;
+    }
+    .sitemvp-chat-panel[hidden], .sitemvp-chat-form[hidden], .sitemvp-chat-cta[hidden] { display: none !important; }
+    .sitemvp-chat-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .sitemvp-chat-kicker { display: block; margin-bottom: 4px; color: var(--sm-chat-muted); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+    .sitemvp-chat-title { margin: 0; color: var(--sm-chat-ink); font-family: inherit; font-size: 20px; font-weight: 650; line-height: 1.2; letter-spacing: -.02em; }
+    .sitemvp-chat-close { display: grid; place-items: center; flex: 0 0 40px; width: 40px; height: 40px; border: 1px solid var(--sm-chat-line); border-radius: 50%; background: transparent; color: var(--sm-chat-ink); font-family: inherit; font-size: 25px; font-weight: 400; line-height: 1; cursor: pointer; }
+    .sitemvp-chat-notice { margin: 0; padding: 9px 11px; border-left: 3px solid var(--sm-chat-accent); background: var(--sm-chat-surface); background: color-mix(in srgb, var(--sm-chat-accent) 14%, var(--sm-chat-surface)); color: var(--sm-chat-ink); font-size: 12px; line-height: 1.45; }
+    .sitemvp-chat-thread { min-height: 120px; max-height: 38vh; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 9px; padding: 2px 2px 4px; }
+    .sitemvp-chat-message { width: fit-content; max-width: 92%; padding: 10px 12px; border: 1px solid var(--sm-chat-line); border-radius: 14px 14px 14px 4px; background: var(--sm-chat-page); color: var(--sm-chat-ink); overflow-wrap: anywhere; }
+    .sitemvp-chat-message p { margin: 0; color: inherit; font: inherit; }
+    .sitemvp-chat-message.is-user { align-self: flex-end; border-color: var(--sm-chat-accent); border-radius: 14px 14px 4px 14px; background: var(--sm-chat-surface); background: color-mix(in srgb, var(--sm-chat-accent) 20%, var(--sm-chat-surface)); }
+    .sitemvp-chat-quick { display: flex; flex-wrap: wrap; gap: 8px; }
+    .sitemvp-chat-widget button, .sitemvp-chat-cta { min-height: 44px; border: 1px solid var(--sm-chat-line); border-radius: 11px; padding: 10px 13px; background: var(--sm-chat-surface); color: var(--sm-chat-ink); font-family: inherit; font-size: 13px; font-weight: 600; line-height: 1.25; text-align: center; cursor: pointer; }
+    .sitemvp-chat-widget button:hover, .sitemvp-chat-cta:hover { border-color: var(--sm-chat-accent); }
+    .sitemvp-chat-form { display: flex; gap: 8px; }
+    .sitemvp-chat-form input { min-width: 0; flex: 1; height: 46px; border: 1px solid var(--sm-chat-line); border-radius: 11px; padding: 0 12px; background: var(--sm-chat-page); color: var(--sm-chat-ink); font-family: inherit; font-size: 14px; line-height: 1.3; }
+    .sitemvp-chat-form input::placeholder { color: var(--sm-chat-muted); opacity: 1; }
+    .sitemvp-chat-form button, .sitemvp-chat-cta { display: inline-flex; align-items: center; justify-content: center; gap: 8px; flex: 0 0 auto; background: var(--sm-chat-ink); color: var(--sm-chat-page); }
+    .sitemvp-chat-cta { align-self: flex-start; text-decoration: none; }
+    .sitemvp-chat-widget button:focus-visible, .sitemvp-chat-widget input:focus-visible, .sitemvp-chat-cta:focus-visible { outline: 3px solid var(--sm-chat-accent); outline-offset: 3px; }
+    .sitemvp-chat-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    @media (max-width: 420px) {
+      .sitemvp-chat-panel { right: max(10px, env(safe-area-inset-right, 0px)); width: calc(100vw - 20px); padding: 13px; gap: 10px; }
+      .sitemvp-chat-thread { max-height: 34vh; }
+    }
+    @media (prefers-reduced-motion: reduce) { .sitemvp-chat-panel, .sitemvp-chat-widget * { scroll-behavior: auto !important; transition: none !important; } }
+  </style>
+  <script>
+    (function () {
+      const root = document.getElementById('sitemvp-chat-widget');
+      if (!root) return;
+      const toggle = root.querySelector('.sitemvp-chat-toggle');
+      const panel = root.querySelector('.sitemvp-chat-panel');
+      const close = root.querySelector('.sitemvp-chat-close');
+      const thread = root.querySelector('.sitemvp-chat-thread');
+      const quick = root.querySelector('.sitemvp-chat-quick');
+      const form = root.querySelector('.sitemvp-chat-form');
+      const input = root.querySelector('.sitemvp-chat-form input');
+      const cta = root.querySelector('.sitemvp-chat-cta');
+      const questions = [
+        '1 из 4. Чем вы занимаетесь и как называется ваш бизнес или как вас зовут?',
+        '2 из 4. Какие ваши 3–5 основных услуг и цены на них?',
+        '3 из 4. Какой контакт указать на сайте для связи с вами?',
+        '4 из 4. Какие фотографии или материалы вы готовы показать? В демо файлы не загружаются — опишите их текстом.'
+      ];
+      let started = false;
+      let step = 0;
+
+      function addMessage(text, kind) {
+        const message = document.createElement('div');
+        message.className = 'sitemvp-chat-message ' + (kind === 'user' ? 'is-user' : 'is-assistant');
+        const paragraph = document.createElement('p');
+        paragraph.textContent = text;
+        message.appendChild(paragraph);
+        thread.appendChild(message);
+        thread.scrollTop = thread.scrollHeight;
+      }
+
+      function openPanel() {
+        panel.hidden = false;
+        toggle.setAttribute('aria-expanded', 'true');
+        toggle.setAttribute('aria-label', 'Закрыть чат');
+        if (started && !form.hidden) input.focus();
+        else if (!quick.hidden) quick.querySelector('button').focus();
+        else close.focus();
+      }
+
+      function closePanel() {
+        panel.hidden = true;
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.setAttribute('aria-label', 'Открыть чат');
+        toggle.focus();
+      }
+
+      toggle.addEventListener('click', function () {
+        if (panel.hidden) openPanel();
+        else closePanel();
+      });
+      close.addEventListener('click', closePanel);
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && !panel.hidden) {
+          event.preventDefault();
+          closePanel();
+        }
+      });
+
+      quick.addEventListener('click', function (event) {
+        const button = event.target.closest('button[data-chat-action]');
+        if (!button) return;
+        if (button.dataset.chatAction === 'prepare') {
+          addMessage('Что подготовить?', 'user');
+          addMessage('Описание вашего дела, 3–5 услуг с ценами, контакт и 2–4 фотографии или материалы. Это демонстрация: используйте вымышленные сведения.', 'assistant');
+          return;
+        }
+        started = true;
+        quick.hidden = true;
+        form.hidden = false;
+        addMessage('Начать', 'user');
+        addMessage(questions[step], 'assistant');
+        input.focus();
+      });
+
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        const answer = input.value.trim();
+        if (!answer) return;
+        addMessage(answer, 'user');
+        input.value = '';
+        step += 1;
+        if (step < questions.length) {
+          addMessage(questions[step], 'assistant');
+          input.focus();
+          return;
+        }
+        addMessage('Спасибо! Оператор свяжется с вами в ближайшее время.', 'assistant');
+        form.hidden = true;
+        cta.hidden = false;
+        cta.focus();
+      });
+    }());
+  </script>
 </body>
 </html>
